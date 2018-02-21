@@ -5,7 +5,7 @@ npm-debug.log
 # TypeScript
 src/*.js
 src/*.map
-src/*.d.ts
+# src/*.d.ts
 
 # JetBrains
 .idea
@@ -29,3 +29,4 @@ Desktop.ini
 **/*.ngfactory.ts
 
 # Build files
+dist/*
