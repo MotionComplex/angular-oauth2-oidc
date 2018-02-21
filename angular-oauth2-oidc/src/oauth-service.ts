@@ -220,7 +220,14 @@ export class OAuthService
     private validateUrlAgainstIssuer(url: string) {
         if (!this.strictDiscoveryDocumentValidation) return true;
         if (!url) return true;
-        return url.toLowerCase().startsWith(this.issuer.toLowerCase());
+
+        this.valid_issuers.forEach(issuer => {
+            if(url.toLowerCase().startsWith(issuer.toLowerCase())){
+                return true;
+            }
+        })
+
+        return false;
     }
 
     private setupRefreshTimer(): void {
@@ -327,7 +334,7 @@ export class OAuthService
         return new Promise((resolve, reject) => {
 
             if (!fullUrl) {
-                fullUrl = this.issuer || '';
+                fullUrl = this.authority || '';
                 if (!fullUrl.endsWith('/')) {
                     fullUrl += '/';
                 }
@@ -352,7 +359,7 @@ export class OAuthService
                     this.loginUrl = doc.authorization_endpoint;
                     this.logoutUrl = doc.end_session_endpoint;
                     this.grantTypesSupported = doc.grant_types_supported;
-                    this.issuer = doc.issuer;
+                    this.authority = doc.issuer;
                     this.tokenEndpoint = doc.token_endpoint;
                     this.userinfoEndpoint = doc.userinfo_endpoint;
                     this.jwksUri = doc.jwks_uri;
@@ -416,11 +423,12 @@ export class OAuthService
     private validateDiscoveryDocument(doc: OidcDiscoveryDoc): boolean {
 
         let errors: string[];
+        let containsIssuer = this.valid_issuers.indexOf(doc.issuer);
 
-        if (!this.skipIssuerCheck && doc.issuer !== this.issuer) {
+        if(!this.skipIssuerCheck && !containsIssuer){
             console.error(
                 'invalid issuer in discovery document',
-                'expected: ' + this.issuer,
+                'expected: ' + this.authority,
                 'current: ' + doc.issuer
             );
             return false;
@@ -778,7 +786,7 @@ export class OAuthService
         this.sessionCheckEventListener = (e: MessageEvent) => {
 
             let origin = e.origin.toLowerCase();
-            let issuer = this.issuer.toLowerCase();
+            let issuer = this.authority.toLowerCase();
 
             this.debug('sessionCheckEventListener');
 
@@ -899,7 +907,7 @@ export class OAuthService
         }
 
         let message = this.clientId + ' ' + sessionState;
-        iframe.contentWindow.postMessage(message, this.issuer);
+        iframe.contentWindow.postMessage(message, this.authority);
     }
 
     private createLoginUrl(
@@ -1283,7 +1291,7 @@ export class OAuthService
                 return Promise.reject(err);
             }
 
-            if (claims.iss !== this.issuer) {
+            if (claims.iss !== this.authority) {
                 let err = 'Wrong issuer: ' + claims.iss;
                 console.warn(err);
                 return Promise.reject(err);

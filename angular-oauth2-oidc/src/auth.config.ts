@@ -46,9 +46,14 @@ export class AuthConfig {
     public options?: any = null;
 
     /**
-     * The issuer's uri.
+     * The authority's uri.
      */
-    public issuer? = '';
+    public authority? = '';
+
+    /**
+     * The valid issuer uris.
+     */
+    public valid_issuers?: string[] = null;
 
     /**
      * The logout url.
