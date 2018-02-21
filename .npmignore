@@ -6,7 +6,7 @@ docs/*
 # TypeScript
 # *.js
 # *.map
-# *.d.ts
+!*.d.ts
 
 # JetBrains
 .idea
@@ -30,5 +30,4 @@ Desktop.ini
 **/*.ngfactory.ts
 
 # Library files
-src/*
 build/*
