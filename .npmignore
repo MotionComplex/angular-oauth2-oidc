@@ -7,7 +7,6 @@ docs/*
 # *.js
 # *.map
 # *.d.ts
-!*.d.ts
 
 # JetBrains
 .idea
@@ -30,6 +29,6 @@ Desktop.ini
 # Ngc generated files
 **/*.ngfactory.ts
 
-# Library files (remove srv eventually)
+# Library files
 src/*
 build/*
