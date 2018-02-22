@@ -423,7 +423,7 @@ export class OAuthService
     private validateDiscoveryDocument(doc: OidcDiscoveryDoc): boolean {
 
         let errors: string[];
-        let containsIssuer = this.valid_issuers.indexOf(doc.issuer);
+        let containsIssuer = this.valid_issuers.indexOf(doc.issuer) >= 0;
 
         if(!this.skipIssuerCheck && !containsIssuer){
             console.error(
@@ -786,17 +786,22 @@ export class OAuthService
         this.sessionCheckEventListener = (e: MessageEvent) => {
 
             let origin = e.origin.toLowerCase();
-            let issuer = this.authority.toLowerCase();
-
+            let contains_issuer = false;
             this.debug('sessionCheckEventListener');
 
-            if (!issuer.startsWith(origin)) {
+            this.valid_issuers.forEach(issuer => {
+                if(issuer.startsWith(origin)){
+                    contains_issuer = true;
+                }
+            })
+
+            if (!contains_issuer) {
                 this.debug(
                     'sessionCheckEventListener',
                     'wrong origin',
                     origin,
-                    'expected',
-                    issuer);
+                    'expected to be contained in',
+                    this.valid_issuers);
             }
 
             switch (e.data) {
@@ -907,7 +912,9 @@ export class OAuthService
         }
 
         let message = this.clientId + ' ' + sessionState;
-        iframe.contentWindow.postMessage(message, this.authority);
+        let issuer = this.valid_issuers.find(issuer => issuer.includes(window.location.hostname))
+        
+        iframe.contentWindow.postMessage(message, issuer);
     }
 
     private createLoginUrl(
@@ -1291,7 +1298,8 @@ export class OAuthService
                 return Promise.reject(err);
             }
 
-            if (claims.iss !== this.authority) {
+            if (this.valid_issuers.indexOf(claims.iss) < 0
+                && claims.iss !== this.authority) {
                 let err = 'Wrong issuer: ' + claims.iss;
                 console.warn(err);
                 return Promise.reject(err);
@@ -1482,6 +1490,8 @@ export class OAuthService
         this.silentRefreshSubject = null;
       
         this.eventsSubject.next(new OAuthInfoEvent('logout'));
+
+        console.log('logoutUrl: ', this.logoutUrl)
 
         if (!this.logoutUrl) return;
         if (noRedirectToLogoutUrl) return;
